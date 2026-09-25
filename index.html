@@ -1,0 +1,616 @@
+TEST123<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f0f14">
+<title>Art Pricing Calculator</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0f0f14;--surface:#1a1a24;--surface2:#22222f;--surface3:#2a2a3a;
+    --border:#2e2e40;--text:#e8e8f0;--text-dim:#8888a0;--text-muted:#5c5c74;
+    --accent:#6c5ce7;--accent-glow:#7c6cf7;--accent-dim:#4a3cb8;
+    --green:#00cec9;--green-dim:#00a8a4;--orange:#fdcb6e;--red:#ff6b6b;
+    --radius:14px;--radius-sm:10px;
+  }
+  html{font-size:16px;-webkit-tap-highlight-color:transparent}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    background:var(--bg);color:var(--text);min-height:100dvh;
+    padding:0 0 env(safe-area-inset-bottom,20px) 0;
+    overflow-x:hidden;
+  }
+  /* Header */
+  .header{
+    position:sticky;top:0;z-index:100;
+    background:rgba(15,15,20,.92);backdrop-filter:blur(20px);
+    padding:16px 20px 12px;border-bottom:1px solid var(--border);
+  }
+  .header h1{font-size:1.25rem;font-weight:700;letter-spacing:-.02em}
+  .header p{font-size:.75rem;color:var(--text-dim);margin-top:2px}
+
+  /* Currency selector */
+  .currency-bar{
+    display:flex;gap:6px;padding:12px 20px;
+  }
+  .currency-btn{
+    flex:1;padding:10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+    background:var(--surface);color:var(--text-dim);font-size:.9rem;font-weight:600;
+    cursor:pointer;transition:all .2s;text-align:center;
+  }
+  .currency-btn.active{
+    border-color:var(--accent);color:var(--accent-glow);
+    background:rgba(108,92,231,.1);
+  }
+
+  /* Main content */
+  .content{padding:8px 16px 100px}
+
+  /* Section cards */
+  .card{
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:var(--radius);padding:18px;margin-bottom:14px;
+  }
+  .card-title{
+    font-size:.8rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;
+    color:var(--text-dim);margin-bottom:14px;display:flex;align-items:center;gap:8px;
+  }
+  .card-title .icon{font-size:1rem}
+
+  /* Form fields */
+  .field{margin-bottom:14px}
+  .field:last-child{margin-bottom:0}
+  .field-label{
+    display:flex;align-items:center;gap:6px;
+    font-size:.8rem;color:var(--text-dim);margin-bottom:6px;font-weight:500;
+  }
+  .info-tip{
+    width:18px;height:18px;border-radius:50%;background:var(--surface3);
+    display:inline-flex;align-items:center;justify-content:center;
+    font-size:.65rem;color:var(--text-muted);cursor:pointer;font-weight:700;
+    position:relative;flex-shrink:0;
+  }
+  .info-tip .tooltip{
+    display:none;position:absolute;bottom:calc(100% + 8px);left:50%;
+    transform:translateX(-50%);background:var(--surface3);border:1px solid var(--border);
+    border-radius:8px;padding:8px 12px;font-size:.72rem;font-weight:400;
+    color:var(--text);white-space:normal;width:220px;z-index:200;
+    line-height:1.4;box-shadow:0 8px 24px rgba(0,0,0,.4);
+  }
+  .info-tip .tooltip::after{
+    content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);
+    border:6px solid transparent;border-top-color:var(--surface3);
+  }
+  .info-tip.show .tooltip{display:block}
+
+  .input-wrap{
+    display:flex;align-items:center;background:var(--surface2);
+    border:1.5px solid var(--border);border-radius:var(--radius-sm);
+    overflow:hidden;transition:border-color .2s;
+  }
+  .input-wrap:focus-within{border-color:var(--accent)}
+  .input-prefix{
+    padding:0 10px;font-size:.85rem;color:var(--text-muted);font-weight:600;
+    user-select:none;flex-shrink:0;
+  }
+  .input-suffix{
+    padding:0 12px;font-size:.8rem;color:var(--text-muted);font-weight:500;
+    user-select:none;flex-shrink:0;
+  }
+  input[type="number"],input[type="text"]{
+    width:100%;padding:14px 12px;background:transparent;border:none;
+    color:var(--text);font-size:1rem;font-weight:500;outline:none;
+    -moz-appearance:textfield;
+  }
+  input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{
+    -webkit-appearance:none;margin:0;
+  }
+  input::placeholder{color:var(--text-muted);font-weight:400}
+
+  /* Materials list */
+  .material-row{
+    display:flex;gap:8px;align-items:center;margin-bottom:8px;
+    animation:slideIn .25s ease;
+  }
+  @keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+  .material-row .input-wrap{flex:1}
+  .material-row .input-wrap:first-child{flex:1.4}
+  .remove-btn{
+    width:36px;height:36px;border-radius:50%;border:none;
+    background:rgba(255,107,107,.12);color:var(--red);font-size:1.2rem;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;transition:all .2s;
+  }
+  .remove-btn:active{transform:scale(.9)}
+
+  .add-material-btn{
+    width:100%;padding:12px;border:1.5px dashed var(--border);border-radius:var(--radius-sm);
+    background:transparent;color:var(--text-dim);font-size:.85rem;font-weight:500;
+    cursor:pointer;transition:all .2s;margin-top:4px;
+  }
+  .add-material-btn:active{background:var(--surface2);border-color:var(--accent)}
+
+  /* Calculate button */
+  .calc-btn{
+    width:100%;padding:18px;border:none;border-radius:var(--radius);
+    background:linear-gradient(135deg,var(--accent),var(--accent-dim));
+    color:#fff;font-size:1.05rem;font-weight:700;cursor:pointer;
+    margin:20px 0 14px;transition:all .2s;letter-spacing:.01em;
+    box-shadow:0 4px 20px rgba(108,92,231,.3);
+  }
+  .calc-btn:active{transform:scale(.98);box-shadow:0 2px 10px rgba(108,92,231,.2)}
+
+  .reset-btn{
+    width:100%;padding:14px;border:1.5px solid var(--border);border-radius:var(--radius);
+    background:transparent;color:var(--text-dim);font-size:.9rem;font-weight:500;
+    cursor:pointer;transition:all .2s;
+  }
+  .reset-btn:active{background:var(--surface2)}
+
+  /* Results section */
+  .results{display:none}
+  .results.visible{display:block;animation:fadeUp .4s ease}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+
+  .breakdown-row{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:11px 0;border-bottom:1px solid rgba(46,46,64,.5);
+  }
+  .breakdown-row:last-child{border-bottom:none}
+  .breakdown-label{font-size:.85rem;color:var(--text-dim)}
+  .breakdown-value{font-size:.9rem;font-weight:600;font-variant-numeric:tabular-nums}
+  .breakdown-row.highlight .breakdown-label{color:var(--green);font-weight:600}
+  .breakdown-row.highlight .breakdown-value{color:var(--green)}
+  .breakdown-row.warn .breakdown-label{color:var(--orange);font-weight:600}
+  .breakdown-row.warn .breakdown-value{color:var(--orange)}
+
+  /* Final price card */
+  .final-price-card{
+    background:linear-gradient(145deg,#1e1e2e,#16162a);
+    border:2px solid var(--accent);border-radius:var(--radius);
+    padding:28px 20px;text-align:center;margin:14px 0;
+    position:relative;overflow:hidden;
+  }
+  .final-price-card::before{
+    content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+    background:radial-gradient(circle at center,rgba(108,92,231,.08),transparent 60%);
+    animation:pulse 3s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
+  .final-price-label{
+    font-size:.75rem;text-transform:uppercase;letter-spacing:.12em;
+    color:var(--accent-glow);font-weight:700;margin-bottom:8px;position:relative;
+  }
+  .final-price-amount{
+    font-size:3rem;font-weight:800;color:#fff;position:relative;
+    font-variant-numeric:tabular-nums;letter-spacing:-.02em;
+    text-shadow:0 0 40px rgba(108,92,231,.4);
+  }
+  .final-price-sub{
+    font-size:.75rem;color:var(--text-muted);margin-top:6px;position:relative;
+    font-weight:500;
+  }
+
+  /* Price animation */
+  .price-reveal .final-price-amount{
+    animation:priceReveal .8s cubic-bezier(.16,1,.3,1) forwards;
+  }
+  @keyframes priceReveal{
+    0%{opacity:0;transform:scale(.5) translateY(20px);filter:blur(10px)}
+    60%{opacity:1;transform:scale(1.05) translateY(-4px);filter:blur(0)}
+    100%{opacity:1;transform:scale(1) translateY(0);filter:blur(0)}
+  }
+
+  /* Chart */
+  .chart-container{
+    margin:14px 0;padding:4px 0;
+  }
+  .bar-chart{display:flex;flex-direction:column;gap:8px}
+  .bar-row{display:flex;align-items:center;gap:10px}
+  .bar-label{font-size:.72rem;color:var(--text-dim);width:72px;flex-shrink:0;text-align:right}
+  .bar-track{flex:1;height:26px;background:var(--surface2);border-radius:6px;overflow:hidden;position:relative}
+  .bar-fill{
+    height:100%;border-radius:6px;transition:width .8s cubic-bezier(.16,1,.3,1);
+    display:flex;align-items:center;padding-left:8px;
+    font-size:.7rem;font-weight:600;color:rgba(255,255,255,.9);min-width:fit-content;
+  }
+  .bar-fill.labor{background:linear-gradient(90deg,#6c5ce7,#a29bfe)}
+  .bar-fill.materials{background:linear-gradient(90deg,#00cec9,#55efc4)}
+  .bar-fill.overhead{background:linear-gradient(90deg,#fdcb6e,#ffeaa7)}
+  .bar-fill.commission{background:linear-gradient(90deg,#ff6b6b,#fab1a0)}
+
+  /* Summary / screenshot view */
+  .summary-overlay{
+    display:none;position:fixed;inset:0;z-index:1000;
+    background:rgba(0,0,0,.85);backdrop-filter:blur(8px);
+    padding:20px;overflow-y:auto;
+  }
+  .summary-overlay.visible{display:flex;align-items:flex-start;justify-content:center}
+  .summary-card{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+    padding:24px 20px;width:100%;max-width:400px;margin-top:20px;
+    animation:fadeUp .3s ease;
+  }
+  .summary-card h2{font-size:1.1rem;margin-bottom:4px}
+  .summary-card .date{font-size:.75rem;color:var(--text-muted);margin-bottom:16px}
+  .summary-divider{height:1px;background:var(--border);margin:14px 0}
+  .summary-final{
+    text-align:center;padding:18px 0;
+    border:1.5px solid var(--accent);border-radius:var(--radius-sm);
+    margin:14px 0;background:rgba(108,92,231,.06);
+  }
+  .summary-final .label{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--accent-glow);font-weight:600}
+  .summary-final .amount{font-size:2.2rem;font-weight:800;margin-top:4px}
+  .close-summary{
+    width:100%;padding:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+    background:transparent;color:var(--text);font-size:.9rem;font-weight:500;
+    cursor:pointer;margin-top:8px;
+  }
+
+  /* Utils */
+  .mt-sm{margin-top:8px}.mb-sm{margin-bottom:8px}
+  .hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Artwork Pricing Calculator</h1>
+  <p>Know your worth. Price without apology.</p>
+</div>
+
+<div class="currency-bar">
+  <button class="currency-btn" data-symbol="£" onclick="setCurrency(this)">£ GBP</button>
+  <button class="currency-btn active" data-symbol="$" onclick="setCurrency(this)">$ USD</button>
+  <button class="currency-btn" data-symbol="€" onclick="setCurrency(this)">€ EUR</button>
+</div>
+
+<div class="content">
+
+  <!-- LABOR -->
+  <div class="card">
+    <div class="card-title"><span class="icon">⏱</span> Labor</div>
+    <div class="field">
+      <div class="field-label">
+        Hourly Rate
+        <span class="info-tip" onclick="toggleTip(this)">?
+          <span class="tooltip">Your base hourly rate for creative work. Think about what a skilled professional charges — not what feels "nice."</span>
+        </span>
+      </div>
+      <div class="input-wrap">
+        <span class="input-prefix currency-symbol">$</span>
+        <input type="number" id="hourlyRate" placeholder="0.00" min="0" step="0.01" inputmode="decimal">
+        <span class="input-suffix">/ hr</span>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-label">
+        Hours Logged
+        <span class="info-tip" onclick="toggleTip(this)">?
+          <span class="tooltip">Total hours spent on this piece — sketching, painting, drying time you were actively managing, finishing, etc.</span>
+        </span>
+      </div>
+      <div class="input-wrap">
+        <input type="number" id="hoursLogged" placeholder="0" min="0" step="0.5" inputmode="decimal">
+        <span class="input-suffix">hours</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MATERIALS -->
+  <div class="card">
+    <div class="card-title"><span class="icon">🎨</span> Materials</div>
+    <div id="materialsContainer">
+      <div class="material-row">
+        <div class="input-wrap">
+          <input type="text" placeholder="Material name" class="mat-name">
+        </div>
+        <div class="input-wrap">
+          <span class="input-prefix currency-symbol">$</span>
+          <input type="number" placeholder="0.00" min="0" step="0.01" inputmode="decimal" class="mat-cost">
+        </div>
+        <button class="remove-btn" onclick="removeMaterial(this)" aria-label="Remove material">&times;</button>
+      </div>
+    </div>
+    <button class="add-material-btn" onclick="addMaterial()">+ Add Material</button>
+  </div>
+
+  <!-- OVERHEAD & COMMISSION -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📊</span> Overhead & Commission</div>
+    <div class="field">
+      <div class="field-label">
+        Fixed Overhead
+        <span class="info-tip" onclick="toggleTip(this)">?
+          <span class="tooltip">Covers studio rent, utilities, insurance, equipment depreciation, subscriptions, packaging, etc. 15–30% is typical.</span>
+        </span>
+      </div>
+      <div class="input-wrap">
+        <input type="number" id="overhead" placeholder="20" min="0" max="100" step="1" inputmode="decimal">
+        <span class="input-suffix">%</span>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-label">
+        Platform / Gallery Commission
+        <span class="info-tip" onclick="toggleTip(this)">?
+          <span class="tooltip">The cut taken by galleries, Etsy, Saatchi, etc. This is applied on top so YOU still make your full margin after they take theirs.</span>
+        </span>
+      </div>
+      <div class="input-wrap">
+        <input type="number" id="commission" placeholder="0" min="0" max="100" step="1" inputmode="decimal">
+        <span class="input-suffix">%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTIONS -->
+  <button class="calc-btn" onclick="calculate()">Calculate My Price</button>
+  <button class="reset-btn" onclick="resetAll()">Reset All</button>
+
+  <!-- RESULTS -->
+  <div class="results" id="results">
+    <div class="card" style="margin-top:20px">
+      <div class="card-title"><span class="icon">📋</span> Cost Breakdown</div>
+      <div id="breakdownRows"></div>
+    </div>
+
+    <div class="chart-container">
+      <div class="card">
+        <div class="card-title"><span class="icon">📊</span> Visual Breakdown</div>
+        <div class="bar-chart" id="barChart"></div>
+      </div>
+    </div>
+
+    <div class="final-price-card" id="finalPriceCard">
+      <div class="final-price-label">Non-Negotiable Retail Price</div>
+      <div class="final-price-amount" id="finalPriceDisplay">$0</div>
+      <div class="final-price-sub">This is what your work is worth. Don't discount it.</div>
+    </div>
+
+    <button class="calc-btn" style="background:linear-gradient(135deg,var(--green),var(--green-dim));box-shadow:0 4px 20px rgba(0,206,201,.2)" onclick="showSummary()">
+      View Summary
+    </button>
+  </div>
+</div>
+
+<!-- SUMMARY OVERLAY -->
+<div class="summary-overlay" id="summaryOverlay">
+  <div class="summary-card" id="summaryContent">
+    <h2>Pricing Summary</h2>
+    <div class="date" id="summaryDate"></div>
+    <div id="summaryBreakdown"></div>
+    <div class="summary-divider"></div>
+    <div class="summary-final">
+      <div class="label">Non-Negotiable Retail Price</div>
+      <div class="amount" id="summaryFinalPrice"></div>
+    </div>
+    <div class="summary-divider"></div>
+    <button class="close-summary" onclick="closeSummary()">Close</button>
+  </div>
+</div>
+
+<script>
+  let currency = '$';
+  let lastResults = null;
+
+  function setCurrency(btn) {
+    document.querySelectorAll('.currency-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currency = btn.dataset.symbol;
+    document.querySelectorAll('.currency-symbol').forEach(el => el.textContent = currency);
+    if (lastResults) renderResults(lastResults);
+  }
+
+  function toggleTip(el) {
+    const wasOpen = el.classList.contains('show');
+    document.querySelectorAll('.info-tip.show').forEach(t => t.classList.remove('show'));
+    if (!wasOpen) el.classList.add('show');
+  }
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.info-tip')) {
+      document.querySelectorAll('.info-tip.show').forEach(t => t.classList.remove('show'));
+    }
+  });
+
+  function addMaterial() {
+    const container = document.getElementById('materialsContainer');
+    const row = document.createElement('div');
+    row.className = 'material-row';
+    row.innerHTML = `
+      <div class="input-wrap"><input type="text" placeholder="Material name" class="mat-name"></div>
+      <div class="input-wrap"><span class="input-prefix currency-symbol">${currency}</span><input type="number" placeholder="0.00" min="0" step="0.01" inputmode="decimal" class="mat-cost"></div>
+      <button class="remove-btn" onclick="removeMaterial(this)" aria-label="Remove material">&times;</button>
+    `;
+    container.appendChild(row);
+  }
+
+  function removeMaterial(btn) {
+    const container = document.getElementById('materialsContainer');
+    if (container.children.length > 1) {
+      btn.parentElement.remove();
+    } else {
+      const row = btn.parentElement;
+      row.querySelector('.mat-name').value = '';
+      row.querySelector('.mat-cost').value = '';
+    }
+  }
+
+  function getMaterials() {
+    const rows = document.querySelectorAll('.material-row');
+    const materials = [];
+    rows.forEach(row => {
+      const name = row.querySelector('.mat-name').value.trim() || 'Unnamed material';
+      const cost = parseFloat(row.querySelector('.mat-cost').value) || 0;
+      if (cost > 0) materials.push({ name, cost });
+    });
+    return materials;
+  }
+
+  function fmt(n) {
+    return currency + n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function calculate() {
+    const hourlyRate = parseFloat(document.getElementById('hourlyRate').value) || 0;
+    const hours = parseFloat(document.getElementById('hoursLogged').value) || 0;
+    const overheadPct = parseFloat(document.getElementById('overhead').value) || 0;
+    const commissionPct = parseFloat(document.getElementById('commission').value) || 0;
+    const materials = getMaterials();
+
+    // Step 1: Labor cost
+    const laborCost = hourlyRate * hours;
+
+    // Step 2: Total material cost
+    const materialCost = materials.reduce((sum, m) => sum + m.cost, 0);
+
+    // Subtotal
+    const subtotal = laborCost + materialCost;
+
+    // Step 3: Overhead → break-even
+    const overheadAmount = subtotal * (overheadPct / 100);
+    const breakEven = subtotal + overheadAmount;
+
+    // Wholesale price (break-even + small margin ~15%)
+    const wholesale = breakEven * 1.15;
+
+    // Step 4: Commission protection
+    // Final = breakEven / (1 - commissionRate) so after commission you still get breakEven+margin
+    const commissionRate = commissionPct / 100;
+    const retailBeforeRound = commissionRate < 1 ? wholesale / (1 - commissionRate) : wholesale;
+    const commissionAmount = retailBeforeRound - wholesale;
+
+    // Step 5: Round up to nearest whole number — never round down
+    const finalPrice = Math.ceil(retailBeforeRound);
+
+    lastResults = {
+      laborCost, materials, materialCost, subtotal,
+      overheadPct, overheadAmount, breakEven, wholesale,
+      commissionPct, commissionAmount, retailBeforeRound, finalPrice
+    };
+
+    renderResults(lastResults);
+
+    const resultsEl = document.getElementById('results');
+    resultsEl.classList.add('visible');
+
+    // Trigger price animation
+    const card = document.getElementById('finalPriceCard');
+    card.classList.remove('price-reveal');
+    void card.offsetWidth;
+    card.classList.add('price-reveal');
+
+    // Scroll to results
+    setTimeout(() => {
+      resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  }
+
+  function renderResults(r) {
+    // Breakdown
+    const rows = [
+      { label: 'Labor Cost', value: fmt(r.laborCost) },
+      ...r.materials.map(m => ({ label: `  ${m.name}`, value: fmt(m.cost) })),
+      { label: 'Total Materials', value: fmt(r.materialCost) },
+      { label: 'Subtotal', value: fmt(r.subtotal), cls: '' },
+      { label: `Overhead (${r.overheadPct}%)`, value: '+ ' + fmt(r.overheadAmount) },
+      { label: 'Break-Even Threshold', value: fmt(r.breakEven), cls: 'warn' },
+      { label: 'Wholesale Price', value: fmt(r.wholesale), cls: '' },
+      { label: `Commission Buffer (${r.commissionPct}%)`, value: '+ ' + fmt(r.commissionAmount) },
+      { label: 'Final Retail Price', value: fmt(r.finalPrice), cls: 'highlight' },
+    ];
+
+    const container = document.getElementById('breakdownRows');
+    container.innerHTML = rows.map(row =>
+      `<div class="breakdown-row ${row.cls || ''}">
+        <span class="breakdown-label">${row.label}</span>
+        <span class="breakdown-value">${row.value}</span>
+      </div>`
+    ).join('');
+
+    // Final price display
+    document.getElementById('finalPriceDisplay').textContent = fmt(r.finalPrice);
+
+    // Bar chart
+    const total = r.laborCost + r.materialCost + r.overheadAmount + r.commissionAmount;
+    const segments = [
+      { label: 'Labor', value: r.laborCost, cls: 'labor' },
+      { label: 'Materials', value: r.materialCost, cls: 'materials' },
+      { label: 'Overhead', value: r.overheadAmount, cls: 'overhead' },
+      { label: 'Commission', value: r.commissionAmount, cls: 'commission' },
+    ].filter(s => s.value > 0);
+
+    const chart = document.getElementById('barChart');
+    chart.innerHTML = segments.map(s => {
+      const pct = total > 0 ? (s.value / total * 100) : 0;
+      return `<div class="bar-row">
+        <span class="bar-label">${s.label}</span>
+        <div class="bar-track">
+          <div class="bar-fill ${s.cls}" style="width:0%">${fmt(s.value)}</div>
+        </div>
+      </div>`;
+    }).join('');
+
+    // Animate bars
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        const fills = chart.querySelectorAll('.bar-fill');
+        segments.forEach((s, i) => {
+          const pct = total > 0 ? Math.max((s.value / total * 100), 8) : 0;
+          if (fills[i]) fills[i].style.width = pct + '%';
+        });
+      }, 50);
+    });
+  }
+
+  function resetAll() {
+    document.getElementById('hourlyRate').value = '';
+    document.getElementById('hoursLogged').value = '';
+    document.getElementById('overhead').value = '';
+    document.getElementById('commission').value = '';
+
+    const container = document.getElementById('materialsContainer');
+    container.innerHTML = `
+      <div class="material-row">
+        <div class="input-wrap"><input type="text" placeholder="Material name" class="mat-name"></div>
+        <div class="input-wrap"><span class="input-prefix currency-symbol">${currency}</span><input type="number" placeholder="0.00" min="0" step="0.01" inputmode="decimal" class="mat-cost"></div>
+        <button class="remove-btn" onclick="removeMaterial(this)" aria-label="Remove material">&times;</button>
+      </div>
+    `;
+
+    document.getElementById('results').classList.remove('visible');
+    lastResults = null;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function showSummary() {
+    if (!lastResults) return;
+    const r = lastResults;
+    const overlay = document.getElementById('summaryOverlay');
+    document.getElementById('summaryDate').textContent = new Date().toLocaleDateString(undefined, {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+
+    const lines = [
+      `<div class="breakdown-row"><span class="breakdown-label">Labor</span><span class="breakdown-value">${fmt(r.laborCost)}</span></div>`,
+      `<div class="breakdown-row"><span class="breakdown-label">Materials</span><span class="breakdown-value">${fmt(r.materialCost)}</span></div>`,
+      `<div class="breakdown-row"><span class="breakdown-label">Overhead (${r.overheadPct}%)</span><span class="breakdown-value">${fmt(r.overheadAmount)}</span></div>`,
+      `<div class="breakdown-row warn"><span class="breakdown-label">Break-Even</span><span class="breakdown-value">${fmt(r.breakEven)}</span></div>`,
+      `<div class="breakdown-row"><span class="breakdown-label">Wholesale</span><span class="breakdown-value">${fmt(r.wholesale)}</span></div>`,
+      `<div class="breakdown-row"><span class="breakdown-label">Commission (${r.commissionPct}%)</span><span class="breakdown-value">${fmt(r.commissionAmount)}</span></div>`,
+    ];
+
+    document.getElementById('summaryBreakdown').innerHTML = lines.join('');
+    document.getElementById('summaryFinalPrice').textContent = fmt(r.finalPrice);
+    overlay.classList.add('visible');
+  }
+
+  function closeSummary() {
+    document.getElementById('summaryOverlay').classList.remove('visible');
+  }
+</script>
+</body>
+</html>
