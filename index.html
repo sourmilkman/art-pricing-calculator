@@ -1,616 +1,574 @@
-TEST123<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="en-GB">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0f0f14">
-<title>Art Pricing Calculator</title>
+<title>Commission Quote Calculator</title>
 <style>
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  :root{
-    --bg:#0f0f14;--surface:#1a1a24;--surface2:#22222f;--surface3:#2a2a3a;
-    --border:#2e2e40;--text:#e8e8f0;--text-dim:#8888a0;--text-muted:#5c5c74;
-    --accent:#6c5ce7;--accent-glow:#7c6cf7;--accent-dim:#4a3cb8;
-    --green:#00cec9;--green-dim:#00a8a4;--orange:#fdcb6e;--red:#ff6b6b;
-    --radius:14px;--radius-sm:10px;
-  }
-  html{font-size:16px;-webkit-tap-highlight-color:transparent}
-  body{
-    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-    background:var(--bg);color:var(--text);min-height:100dvh;
-    padding:0 0 env(safe-area-inset-bottom,20px) 0;
-    overflow-x:hidden;
-  }
-  /* Header */
-  .header{
-    position:sticky;top:0;z-index:100;
-    background:rgba(15,15,20,.92);backdrop-filter:blur(20px);
-    padding:16px 20px 12px;border-bottom:1px solid var(--border);
-  }
-  .header h1{font-size:1.25rem;font-weight:700;letter-spacing:-.02em}
-  .header p{font-size:.75rem;color:var(--text-dim);margin-top:2px}
-
-  /* Currency selector */
-  .currency-bar{
-    display:flex;gap:6px;padding:12px 20px;
-  }
-  .currency-btn{
-    flex:1;padding:10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
-    background:var(--surface);color:var(--text-dim);font-size:.9rem;font-weight:600;
-    cursor:pointer;transition:all .2s;text-align:center;
-  }
-  .currency-btn.active{
-    border-color:var(--accent);color:var(--accent-glow);
-    background:rgba(108,92,231,.1);
-  }
-
-  /* Main content */
-  .content{padding:8px 16px 100px}
-
-  /* Section cards */
-  .card{
-    background:var(--surface);border:1px solid var(--border);
-    border-radius:var(--radius);padding:18px;margin-bottom:14px;
-  }
-  .card-title{
-    font-size:.8rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;
-    color:var(--text-dim);margin-bottom:14px;display:flex;align-items:center;gap:8px;
-  }
-  .card-title .icon{font-size:1rem}
-
-  /* Form fields */
-  .field{margin-bottom:14px}
-  .field:last-child{margin-bottom:0}
-  .field-label{
-    display:flex;align-items:center;gap:6px;
-    font-size:.8rem;color:var(--text-dim);margin-bottom:6px;font-weight:500;
-  }
-  .info-tip{
-    width:18px;height:18px;border-radius:50%;background:var(--surface3);
-    display:inline-flex;align-items:center;justify-content:center;
-    font-size:.65rem;color:var(--text-muted);cursor:pointer;font-weight:700;
-    position:relative;flex-shrink:0;
-  }
-  .info-tip .tooltip{
-    display:none;position:absolute;bottom:calc(100% + 8px);left:50%;
-    transform:translateX(-50%);background:var(--surface3);border:1px solid var(--border);
-    border-radius:8px;padding:8px 12px;font-size:.72rem;font-weight:400;
-    color:var(--text);white-space:normal;width:220px;z-index:200;
-    line-height:1.4;box-shadow:0 8px 24px rgba(0,0,0,.4);
-  }
-  .info-tip .tooltip::after{
-    content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);
-    border:6px solid transparent;border-top-color:var(--surface3);
-  }
-  .info-tip.show .tooltip{display:block}
-
-  .input-wrap{
-    display:flex;align-items:center;background:var(--surface2);
-    border:1.5px solid var(--border);border-radius:var(--radius-sm);
-    overflow:hidden;transition:border-color .2s;
-  }
-  .input-wrap:focus-within{border-color:var(--accent)}
-  .input-prefix{
-    padding:0 10px;font-size:.85rem;color:var(--text-muted);font-weight:600;
-    user-select:none;flex-shrink:0;
-  }
-  .input-suffix{
-    padding:0 12px;font-size:.8rem;color:var(--text-muted);font-weight:500;
-    user-select:none;flex-shrink:0;
-  }
-  input[type="number"],input[type="text"]{
-    width:100%;padding:14px 12px;background:transparent;border:none;
-    color:var(--text);font-size:1rem;font-weight:500;outline:none;
-    -moz-appearance:textfield;
-  }
-  input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{
-    -webkit-appearance:none;margin:0;
-  }
-  input::placeholder{color:var(--text-muted);font-weight:400}
-
-  /* Materials list */
-  .material-row{
-    display:flex;gap:8px;align-items:center;margin-bottom:8px;
-    animation:slideIn .25s ease;
-  }
-  @keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
-  .material-row .input-wrap{flex:1}
-  .material-row .input-wrap:first-child{flex:1.4}
-  .remove-btn{
-    width:36px;height:36px;border-radius:50%;border:none;
-    background:rgba(255,107,107,.12);color:var(--red);font-size:1.2rem;
-    cursor:pointer;display:flex;align-items:center;justify-content:center;
-    flex-shrink:0;transition:all .2s;
-  }
-  .remove-btn:active{transform:scale(.9)}
-
-  .add-material-btn{
-    width:100%;padding:12px;border:1.5px dashed var(--border);border-radius:var(--radius-sm);
-    background:transparent;color:var(--text-dim);font-size:.85rem;font-weight:500;
-    cursor:pointer;transition:all .2s;margin-top:4px;
-  }
-  .add-material-btn:active{background:var(--surface2);border-color:var(--accent)}
-
-  /* Calculate button */
-  .calc-btn{
-    width:100%;padding:18px;border:none;border-radius:var(--radius);
-    background:linear-gradient(135deg,var(--accent),var(--accent-dim));
-    color:#fff;font-size:1.05rem;font-weight:700;cursor:pointer;
-    margin:20px 0 14px;transition:all .2s;letter-spacing:.01em;
-    box-shadow:0 4px 20px rgba(108,92,231,.3);
-  }
-  .calc-btn:active{transform:scale(.98);box-shadow:0 2px 10px rgba(108,92,231,.2)}
-
-  .reset-btn{
-    width:100%;padding:14px;border:1.5px solid var(--border);border-radius:var(--radius);
-    background:transparent;color:var(--text-dim);font-size:.9rem;font-weight:500;
-    cursor:pointer;transition:all .2s;
-  }
-  .reset-btn:active{background:var(--surface2)}
-
-  /* Results section */
-  .results{display:none}
-  .results.visible{display:block;animation:fadeUp .4s ease}
-  @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
-
-  .breakdown-row{
-    display:flex;justify-content:space-between;align-items:center;
-    padding:11px 0;border-bottom:1px solid rgba(46,46,64,.5);
-  }
-  .breakdown-row:last-child{border-bottom:none}
-  .breakdown-label{font-size:.85rem;color:var(--text-dim)}
-  .breakdown-value{font-size:.9rem;font-weight:600;font-variant-numeric:tabular-nums}
-  .breakdown-row.highlight .breakdown-label{color:var(--green);font-weight:600}
-  .breakdown-row.highlight .breakdown-value{color:var(--green)}
-  .breakdown-row.warn .breakdown-label{color:var(--orange);font-weight:600}
-  .breakdown-row.warn .breakdown-value{color:var(--orange)}
-
-  /* Final price card */
-  .final-price-card{
-    background:linear-gradient(145deg,#1e1e2e,#16162a);
-    border:2px solid var(--accent);border-radius:var(--radius);
-    padding:28px 20px;text-align:center;margin:14px 0;
-    position:relative;overflow:hidden;
-  }
-  .final-price-card::before{
-    content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
-    background:radial-gradient(circle at center,rgba(108,92,231,.08),transparent 60%);
-    animation:pulse 3s ease-in-out infinite;
-  }
-  @keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
-  .final-price-label{
-    font-size:.75rem;text-transform:uppercase;letter-spacing:.12em;
-    color:var(--accent-glow);font-weight:700;margin-bottom:8px;position:relative;
-  }
-  .final-price-amount{
-    font-size:3rem;font-weight:800;color:#fff;position:relative;
-    font-variant-numeric:tabular-nums;letter-spacing:-.02em;
-    text-shadow:0 0 40px rgba(108,92,231,.4);
-  }
-  .final-price-sub{
-    font-size:.75rem;color:var(--text-muted);margin-top:6px;position:relative;
-    font-weight:500;
-  }
-
-  /* Price animation */
-  .price-reveal .final-price-amount{
-    animation:priceReveal .8s cubic-bezier(.16,1,.3,1) forwards;
-  }
-  @keyframes priceReveal{
-    0%{opacity:0;transform:scale(.5) translateY(20px);filter:blur(10px)}
-    60%{opacity:1;transform:scale(1.05) translateY(-4px);filter:blur(0)}
-    100%{opacity:1;transform:scale(1) translateY(0);filter:blur(0)}
-  }
-
-  /* Chart */
-  .chart-container{
-    margin:14px 0;padding:4px 0;
-  }
-  .bar-chart{display:flex;flex-direction:column;gap:8px}
-  .bar-row{display:flex;align-items:center;gap:10px}
-  .bar-label{font-size:.72rem;color:var(--text-dim);width:72px;flex-shrink:0;text-align:right}
-  .bar-track{flex:1;height:26px;background:var(--surface2);border-radius:6px;overflow:hidden;position:relative}
-  .bar-fill{
-    height:100%;border-radius:6px;transition:width .8s cubic-bezier(.16,1,.3,1);
-    display:flex;align-items:center;padding-left:8px;
-    font-size:.7rem;font-weight:600;color:rgba(255,255,255,.9);min-width:fit-content;
-  }
-  .bar-fill.labor{background:linear-gradient(90deg,#6c5ce7,#a29bfe)}
-  .bar-fill.materials{background:linear-gradient(90deg,#00cec9,#55efc4)}
-  .bar-fill.overhead{background:linear-gradient(90deg,#fdcb6e,#ffeaa7)}
-  .bar-fill.commission{background:linear-gradient(90deg,#ff6b6b,#fab1a0)}
-
-  /* Summary / screenshot view */
-  .summary-overlay{
-    display:none;position:fixed;inset:0;z-index:1000;
-    background:rgba(0,0,0,.85);backdrop-filter:blur(8px);
-    padding:20px;overflow-y:auto;
-  }
-  .summary-overlay.visible{display:flex;align-items:flex-start;justify-content:center}
-  .summary-card{
-    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
-    padding:24px 20px;width:100%;max-width:400px;margin-top:20px;
-    animation:fadeUp .3s ease;
-  }
-  .summary-card h2{font-size:1.1rem;margin-bottom:4px}
-  .summary-card .date{font-size:.75rem;color:var(--text-muted);margin-bottom:16px}
-  .summary-divider{height:1px;background:var(--border);margin:14px 0}
-  .summary-final{
-    text-align:center;padding:18px 0;
-    border:1.5px solid var(--accent);border-radius:var(--radius-sm);
-    margin:14px 0;background:rgba(108,92,231,.06);
-  }
-  .summary-final .label{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--accent-glow);font-weight:600}
-  .summary-final .amount{font-size:2.2rem;font-weight:800;margin-top:4px}
-  .close-summary{
-    width:100%;padding:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
-    background:transparent;color:var(--text);font-size:.9rem;font-weight:500;
-    cursor:pointer;margin-top:8px;
-  }
-
-  /* Utils */
-  .mt-sm{margin-top:8px}.mb-sm{margin-bottom:8px}
-  .hidden{display:none!important}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f0f14;--surface:#1a1a24;--surface2:#22222f;--surface3:#2a2a3a;
+  --border:#2e2e40;--text:#e8e8f0;--dim:#8888a0;--muted:#5c5c74;
+  --accent:#6c5ce7;--glow:#8c7cff;--accent-dim:#4a3cb8;
+  --teal:#00cec9;--orange:#fdcb6e;--red:#ff6b6b;--green:#2ecc71;
+  --r:14px;--rs:10px;
+}
+html{font-size:16px;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100dvh;overflow-x:hidden}
+.header{position:sticky;top:0;z-index:50;background:rgba(15,15,20,.95);backdrop-filter:blur(20px);padding:14px 18px 10px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.header h1{font-size:1.1rem;font-weight:700}
+.header p{font-size:.7rem;color:var(--dim);margin-top:2px}
+.hbtn{background:var(--surface2);border:1px solid var(--border);color:var(--dim);border-radius:20px;padding:8px 12px;font-size:.72rem;font-weight:600;cursor:pointer}
+.content{padding:12px 14px 190px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:12px}
+.card-title{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.field{margin-bottom:14px}.field:last-child{margin-bottom:0}
+.label{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:.78rem;color:var(--dim);margin-bottom:6px;font-weight:600}
+.label .val{color:var(--text);font-weight:700;font-variant-numeric:tabular-nums}
+.info{width:18px;height:18px;border-radius:50%;background:var(--surface3);display:inline-flex;align-items:center;justify-content:center;font-size:.62rem;color:var(--muted);cursor:pointer;font-weight:700;position:relative;flex-shrink:0}
+.info .tip{display:none;position:absolute;bottom:calc(100% + 8px);right:-10px;background:var(--surface3);border:1px solid var(--border);border-radius:8px;padding:8px 11px;font-size:.72rem;font-weight:400;color:var(--text);width:230px;z-index:100;line-height:1.4;box-shadow:0 8px 24px rgba(0,0,0,.5);text-transform:none;letter-spacing:0}
+.info.show .tip{display:block}
+.lw{display:flex;align-items:center;gap:6px}
+.input,select.input{width:100%;padding:13px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rs);color:var(--text);font-size:.95rem;outline:none;-webkit-appearance:none;appearance:none;font-family:inherit}
+.input:focus{border-color:var(--accent)}
+select.input{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238888a0' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+.row{display:flex;gap:8px}.row>*{flex:1;min-width:0}
+.seg{display:flex;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rs);padding:3px;gap:3px}
+.seg button{flex:1;padding:10px 4px;border:none;border-radius:8px;background:transparent;color:var(--dim);font-size:.78rem;font-weight:600;cursor:pointer}
+.seg button.on{background:var(--accent);color:#fff}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{padding:7px 11px;border:1px solid var(--border);border-radius:20px;background:var(--surface2);color:var(--dim);font-size:.72rem;font-weight:600;cursor:pointer}
+.chip.on{border-color:var(--accent);color:var(--glow);background:rgba(108,92,231,.12)}
+input[type=range]{-webkit-appearance:none;width:100%;height:32px;background:transparent}
+input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--accent) var(--p,50%),var(--surface3) var(--p,50%))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:#fff;border:3px solid var(--accent);margin-top:-10px;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.range-ends{display:flex;justify-content:space-between;font-size:.62rem;color:var(--muted);margin-top:-2px}
+.note{font-size:.7rem;color:var(--muted);line-height:1.45;margin-top:6px}
+.estbox{background:rgba(108,92,231,.08);border:1px solid rgba(108,92,231,.3);border-radius:var(--rs);padding:10px 12px;font-size:.78rem;color:var(--dim);margin-top:10px;display:flex;justify-content:space-between;align-items:center}
+.estbox b{color:var(--text);font-size:.95rem}
+.mat-row{display:flex;gap:6px;align-items:center;margin-bottom:8px}
+.mat-row .input{padding:11px 10px;font-size:.85rem}
+.mat-row .n{flex:2}.mat-row .c{flex:1}
+.ibtn{width:38px;height:42px;border:none;border-radius:8px;flex-shrink:0;cursor:pointer;font-size:.95rem;display:flex;align-items:center;justify-content:center;text-decoration:none}
+.ibtn.x{background:rgba(255,107,107,.12);color:var(--red)}
+.ibtn.j{background:rgba(0,206,201,.12);color:var(--teal);font-size:.62rem;font-weight:800}
+.addbtn{width:100%;padding:11px;border:1.5px dashed var(--border);border-radius:var(--rs);background:transparent;color:var(--dim);font-size:.8rem;font-weight:600;cursor:pointer}
+.toggle{display:flex;justify-content:space-between;align-items:center;padding:4px 0}
+.sw{position:relative;width:50px;height:28px;flex-shrink:0}
+.sw input{opacity:0;width:0;height:0}
+.sw span{position:absolute;inset:0;background:var(--surface3);border-radius:14px;transition:.2s;cursor:pointer}
+.sw span::before{content:'';position:absolute;width:22px;height:22px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+.sw input:checked+span{background:var(--accent)}
+.sw input:checked+span::before{transform:translateX(22px)}
+.brow{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(46,46,64,.5);font-size:.84rem}
+.brow:last-child{border-bottom:none}
+.brow .k{color:var(--dim)}.brow .v{font-weight:600;font-variant-numeric:tabular-nums}
+.brow.hl .k,.brow.hl .v{color:var(--orange);font-weight:700}
+.brow.tot .k,.brow.tot .v{color:var(--green);font-weight:800}
+.method{display:flex;justify-content:space-between;align-items:center;padding:12px;border:1.5px solid var(--border);border-radius:var(--rs);margin-bottom:8px;cursor:pointer;background:var(--surface2)}
+.method.on{border-color:var(--accent);background:rgba(108,92,231,.1)}
+.method .mt{font-size:.82rem;font-weight:700}
+.method .md{font-size:.68rem;color:var(--muted);margin-top:2px}
+.method .mp{font-size:1rem;font-weight:800;font-variant-numeric:tabular-nums}
+.bars{display:flex;height:14px;border-radius:7px;overflow:hidden;margin:4px 0 10px;background:var(--surface3)}
+.bars div{transition:width .5s}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:.68rem;color:var(--dim)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:middle}
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:60;background:rgba(20,20,30,.97);backdrop-filter:blur(20px);border-top:2px solid var(--accent);padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 30px rgba(0,0,0,.5)}
+.dock-top{display:flex;justify-content:space-between;align-items:flex-end}
+.dock .lbl{font-size:.62rem;text-transform:uppercase;letter-spacing:.12em;color:var(--glow);font-weight:800}
+.dock .price{font-size:2.3rem;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.05;text-shadow:0 0 30px rgba(108,92,231,.5)}
+.dock .price.pop{animation:pop .45s cubic-bezier(.16,1,.3,1)}
+@keyframes pop{0%{transform:scale(.92);opacity:.6}60%{transform:scale(1.04)}100%{transform:scale(1);opacity:1}}
+.dock .dep{text-align:right;font-size:.72rem;color:var(--dim);line-height:1.5}
+.dock .dep b{color:var(--text);font-size:.9rem}
+.dock-btns{display:flex;gap:8px;margin-top:10px}
+.dock-btns button{flex:1;padding:12px;border:none;border-radius:var(--rs);font-size:.82rem;font-weight:700;cursor:pointer}
+.b1{background:linear-gradient(135deg,var(--accent),var(--accent-dim));color:#fff}
+.b2{background:var(--surface2);color:var(--text);border:1px solid var(--border)!important}
+.overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);overflow-y:auto;padding:18px}
+.overlay.open{display:block}
+.sheet{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px 18px;max-width:440px;margin:10px auto 40px}
+.sheet h2{font-size:1.1rem;margin-bottom:2px}
+.sheet .sub{font-size:.72rem;color:var(--muted);margin-bottom:14px}
+.qbig{text-align:center;border:2px solid var(--accent);border-radius:var(--rs);padding:18px;margin:14px 0;background:rgba(108,92,231,.07)}
+.qbig .l{font-size:.66rem;text-transform:uppercase;letter-spacing:.12em;color:var(--glow);font-weight:800}
+.qbig .a{font-size:2.4rem;font-weight:900;margin-top:4px}
+.qbig .d{font-size:.8rem;color:var(--dim);margin-top:6px}
+.btn{width:100%;padding:14px;border:none;border-radius:var(--rs);font-size:.88rem;font-weight:700;cursor:pointer;margin-top:8px}
+.hist{padding:12px;border:1px solid var(--border);border-radius:var(--rs);margin-bottom:8px;background:var(--surface2)}
+.hist .t{display:flex;justify-content:space-between;font-weight:700;font-size:.88rem}
+.hist .m{font-size:.72rem;color:var(--muted);margin-top:3px}
+.hist .a{display:flex;gap:6px;margin-top:8px}
+.hist .a button{flex:1;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--dim);font-size:.72rem;font-weight:600;cursor:pointer}
+.toast{position:fixed;top:70px;left:50%;transform:translateX(-50%) translateY(-10px);background:var(--green);color:#000;padding:10px 18px;border-radius:20px;font-size:.8rem;font-weight:700;opacity:0;transition:.3s;z-index:300;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+details summary{list-style:none;cursor:pointer}
+details summary::-webkit-details-marker{display:none}
+details[open] .chev{transform:rotate(180deg)}
+.chev{transition:.2s;margin-left:auto}
+.hidden{display:none!important}
 </style>
 </head>
 <body>
 
 <div class="header">
-  <h1>Artwork Pricing Calculator</h1>
-  <p>Know your worth. Price without apology.</p>
-</div>
-
-<div class="currency-bar">
-  <button class="currency-btn" data-symbol="£" onclick="setCurrency(this)">£ GBP</button>
-  <button class="currency-btn active" data-symbol="$" onclick="setCurrency(this)">$ USD</button>
-  <button class="currency-btn" data-symbol="€" onclick="setCurrency(this)">€ EUR</button>
+  <div>
+    <h1>Commission Quote</h1>
+    <p>Price it before you paint it.</p>
+  </div>
+  <button class="hbtn" onclick="openHistory()">Past quotes</button>
 </div>
 
 <div class="content">
 
-  <!-- LABOR -->
+  <!-- THE JOB -->
   <div class="card">
-    <div class="card-title"><span class="icon">⏱</span> Labor</div>
+    <div class="card-title">🖼 The commission</div>
     <div class="field">
-      <div class="field-label">
-        Hourly Rate
-        <span class="info-tip" onclick="toggleTip(this)">?
-          <span class="tooltip">Your base hourly rate for creative work. Think about what a skilled professional charges — not what feels "nice."</span>
-        </span>
-      </div>
-      <div class="input-wrap">
-        <span class="input-prefix currency-symbol">$</span>
-        <input type="number" id="hourlyRate" placeholder="0.00" min="0" step="0.01" inputmode="decimal">
-        <span class="input-suffix">/ hr</span>
-      </div>
+      <div class="label">Patron / reference <span style="color:var(--muted);font-weight:500">optional</span></div>
+      <input class="input" id="patron" placeholder="e.g. Mrs Jones – dog portrait">
     </div>
     <div class="field">
-      <div class="field-label">
-        Hours Logged
-        <span class="info-tip" onclick="toggleTip(this)">?
-          <span class="tooltip">Total hours spent on this piece — sketching, painting, drying time you were actively managing, finishing, etc.</span>
-        </span>
+      <div class="label"><span class="lw">Subject matter <span class="info" onclick="tip(this)">?<span class="tip">Harder subjects take longer. This adjusts the hour estimate: portraits and buildings need more precision than landscapes or abstracts.</span></span></span></div>
+      <select class="input" id="subject"></select>
+    </div>
+    <div class="field">
+      <div class="label"><span class="lw">Medium <span class="info" onclick="tip(this)">?<span class="tip">Sets the typical working speed and material cost per area. Oils are slowest and priciest; graphite is fastest and cheapest.</span></span></span></div>
+      <select class="input" id="medium"></select>
+    </div>
+    <div class="field">
+      <div class="label">Level of detail <span class="val" id="detailVal">Standard</span></div>
+      <div class="seg" id="detailSeg">
+        <button data-v="0.75">Loose</button><button data-v="1" class="on">Standard</button><button data-v="1.4">Highly detailed</button>
       </div>
-      <div class="input-wrap">
-        <input type="number" id="hoursLogged" placeholder="0" min="0" step="0.5" inputmode="decimal">
-        <span class="input-suffix">hours</span>
+    </div>
+  </div>
+
+  <!-- SIZE -->
+  <div class="card">
+    <div class="card-title">📐 Size</div>
+    <div class="field">
+      <div class="seg" id="unitSeg"><button data-v="cm" class="on">cm</button><button data-v="in">inches</button></div>
+    </div>
+    <div class="row field">
+      <div><div class="label">Width</div><input class="input" type="number" id="w" inputmode="decimal" value="40"></div>
+      <div><div class="label">Height</div><input class="input" type="number" id="h" inputmode="decimal" value="50"></div>
+    </div>
+    <div class="chips" id="sizeChips"></div>
+  </div>
+
+  <!-- TIME -->
+  <div class="card">
+    <div class="card-title">⏱ Time</div>
+    <div class="field">
+      <div class="seg" id="timeSeg">
+        <button data-v="auto" class="on">Estimate for me</button><button data-v="scale">Rough timescale</button><button data-v="exact">I know the hours</button>
       </div>
+    </div>
+    <div id="timeAuto">
+      <div class="note">Worked out from size, medium, subject and detail. Nudge it if it looks off for how you work.</div>
+      <div class="field" style="margin-top:10px">
+        <div class="label">Adjust estimate <span class="val" id="adjVal">100%</span></div>
+        <input type="range" id="adj" min="50" max="200" step="5" value="100">
+        <div class="range-ends"><span>50% (I'm quick)</span><span>200% (I'm slow)</span></div>
+      </div>
+    </div>
+    <div id="timeScale" class="hidden">
+      <div class="row field">
+        <div><div class="label">About</div><input class="input" type="number" id="tsN" inputmode="decimal" value="2"></div>
+        <div><div class="label">&nbsp;</div><select class="input" id="tsU"><option value="days">days</option><option value="weeks" selected>weeks</option></select></div>
+      </div>
+      <div class="row field">
+        <div><div class="label">Painting days / week</div><input class="input" type="number" id="tsDpw" inputmode="decimal" value="4"></div>
+        <div><div class="label">Hours / day on it</div><input class="input" type="number" id="tsHpd" inputmode="decimal" value="3"></div>
+      </div>
+    </div>
+    <div id="timeExact" class="hidden field">
+      <div class="label">Hours</div>
+      <input class="input" type="number" id="hrs" inputmode="decimal" value="20">
+    </div>
+    <div class="estbox"><span>Hours used in quote</span><b id="hoursOut">–</b></div>
+  </div>
+
+  <!-- RATE -->
+  <div class="card">
+    <div class="card-title">💷 Hourly rate</div>
+    <div class="field">
+      <div class="label"><span class="lw">Your rate <span class="info" onclick="tip(this)">?<span class="tip">Slide until the total matches what you've charged for similar commissions before. The quote updates as you move it.</span></span></span><span class="val" id="rateVal">£20/hr</span></div>
+      <input type="range" id="rate" min="10" max="80" step="1" value="20">
+      <div class="range-ends"><span>£10</span><span>£80</span></div>
     </div>
   </div>
 
   <!-- MATERIALS -->
   <div class="card">
-    <div class="card-title"><span class="icon">🎨</span> Materials</div>
-    <div id="materialsContainer">
-      <div class="material-row">
-        <div class="input-wrap">
-          <input type="text" placeholder="Material name" class="mat-name">
-        </div>
-        <div class="input-wrap">
-          <span class="input-prefix currency-symbol">$</span>
-          <input type="number" placeholder="0.00" min="0" step="0.01" inputmode="decimal" class="mat-cost">
-        </div>
-        <button class="remove-btn" onclick="removeMaterial(this)" aria-label="Remove material">&times;</button>
-      </div>
-    </div>
-    <button class="add-material-btn" onclick="addMaterial()">+ Add Material</button>
+    <div class="card-title">🎨 Materials</div>
+    <div class="estbox" style="margin-top:0"><span>Typical for this medium &amp; size</span><b id="matEst">–</b></div>
+    <div class="note">Used automatically. Add your own items below to replace it with an exact list. The <b style="color:var(--teal)">J</b> button searches Jackson's Art for that item.</div>
+    <div id="mats" style="margin-top:12px"></div>
+    <button class="addbtn" onclick="addMat()">+ Add material</button>
   </div>
 
-  <!-- OVERHEAD & COMMISSION -->
+  <!-- FRAMING -->
   <div class="card">
-    <div class="card-title"><span class="icon">📊</span> Overhead & Commission</div>
-    <div class="field">
-      <div class="field-label">
-        Fixed Overhead
-        <span class="info-tip" onclick="toggleTip(this)">?
-          <span class="tooltip">Covers studio rent, utilities, insurance, equipment depreciation, subscriptions, packaging, etc. 15–30% is typical.</span>
-        </span>
-      </div>
-      <div class="input-wrap">
-        <input type="number" id="overhead" placeholder="20" min="0" max="100" step="1" inputmode="decimal">
-        <span class="input-suffix">%</span>
-      </div>
+    <div class="card-title">🪟 Framing</div>
+    <div class="toggle">
+      <span style="font-size:.88rem;font-weight:600">Framed</span>
+      <label class="sw"><input type="checkbox" id="framed"><span></span></label>
     </div>
-    <div class="field">
-      <div class="field-label">
-        Platform / Gallery Commission
-        <span class="info-tip" onclick="toggleTip(this)">?
-          <span class="tooltip">The cut taken by galleries, Etsy, Saatchi, etc. This is applied on top so YOU still make your full margin after they take theirs.</span>
-        </span>
+    <div id="frameOpts" class="hidden" style="margin-top:12px">
+      <div class="field">
+        <div class="seg" id="frameSeg"><button data-v="0.35">Budget</button><button data-v="0.7" class="on">Standard</button><button data-v="1.2">Premium</button></div>
       </div>
-      <div class="input-wrap">
-        <input type="number" id="commission" placeholder="0" min="0" max="100" step="1" inputmode="decimal">
-        <span class="input-suffix">%</span>
+      <div class="field">
+        <div class="label"><span class="lw">Exact frame cost <span class="info" onclick="tip(this)">?<span class="tip">If you have a framer's quote, enter it here. Otherwise the estimate uses the frame's perimeter × a per-cm rate for the level you picked.</span></span></span><span style="color:var(--muted);font-weight:500">optional</span></div>
+        <input class="input" type="number" id="frameExact" inputmode="decimal" placeholder="Leave blank to estimate">
       </div>
+      <div class="estbox"><span>Frame cost</span><b id="frameOut">–</b></div>
     </div>
   </div>
 
-  <!-- ACTIONS -->
-  <button class="calc-btn" onclick="calculate()">Calculate My Price</button>
-  <button class="reset-btn" onclick="resetAll()">Reset All</button>
+  <!-- PRICING METHOD -->
+  <div class="card">
+    <div class="card-title">🧮 Pricing formula <span class="info" onclick="tip(this)">?<span class="tip">Three standard formulas artists use. Time + materials pays you for the work. Linear inch and square inch are size-based and common with galleries. "Highest" stops you quoting under any of them.</span></span></div>
+    <div id="methods"></div>
+  </div>
 
-  <!-- RESULTS -->
-  <div class="results" id="results">
-    <div class="card" style="margin-top:20px">
-      <div class="card-title"><span class="icon">📋</span> Cost Breakdown</div>
-      <div id="breakdownRows"></div>
+  <!-- BREAKDOWN -->
+  <div class="card">
+    <div class="card-title">📋 Breakdown</div>
+    <div class="bars" id="bars"></div>
+    <div class="legend" id="legend"></div>
+    <div id="breakdown" style="margin-top:10px"></div>
+  </div>
+
+  <!-- DEPOSIT -->
+  <div class="card">
+    <div class="card-title">🤝 Deposit</div>
+    <div class="field">
+      <div class="label">Deposit on booking <span class="val" id="depVal">50%</span></div>
+      <input type="range" id="dep" min="25" max="50" step="5" value="50">
+      <div class="range-ends"><span>25%</span><span>50%</span></div>
     </div>
+  </div>
 
-    <div class="chart-container">
-      <div class="card">
-        <div class="card-title"><span class="icon">📊</span> Visual Breakdown</div>
-        <div class="bar-chart" id="barChart"></div>
+  <!-- ADVANCED -->
+  <details class="card">
+    <summary class="card-title" style="margin:0">⚙️ Advanced settings <span class="chev">▾</span></summary>
+    <div style="margin-top:14px">
+      <div class="field">
+        <div class="label"><span class="lw">Overhead <span class="info" onclick="tip(this)">?<span class="tip">Studio costs, insurance, website, admin, photographing the work, packaging. Added on top of labour, materials and frame.</span></span></span><span class="val" id="ohVal">15%</span></div>
+        <input type="range" id="oh" min="0" max="40" step="1" value="15">
+      </div>
+      <div class="field">
+        <div class="label"><span class="lw">Platform / agent fee <span class="info" onclick="tip(this)">?<span class="tip">Only if someone takes a cut (e.g. a gallery or website). The price is grossed up so you still take home the full amount.</span></span></span><span class="val" id="feeVal">0%</span></div>
+        <input type="range" id="fee" min="0" max="50" step="1" value="0">
+      </div>
+      <div class="row field">
+        <div><div class="label">£ per linear inch</div><input class="input" type="number" id="linMult" inputmode="decimal" value="10"></div>
+        <div><div class="label">£ per sq inch</div><input class="input" type="number" id="sqRate" inputmode="decimal" value="1.5"></div>
+      </div>
+      <div class="field">
+        <div class="label">Round final quote up to nearest</div>
+        <div class="seg" id="roundSeg"><button data-v="1">£1</button><button data-v="5" class="on">£5</button><button data-v="10">£10</button><button data-v="25">£25</button></div>
+      </div>
+      <div class="field">
+        <div class="label">Minimum commission price</div>
+        <input class="input" type="number" id="minPrice" inputmode="decimal" value="0">
       </div>
     </div>
+  </details>
 
-    <div class="final-price-card" id="finalPriceCard">
-      <div class="final-price-label">Non-Negotiable Retail Price</div>
-      <div class="final-price-amount" id="finalPriceDisplay">$0</div>
-      <div class="final-price-sub">This is what your work is worth. Don't discount it.</div>
+  <button class="btn b2" onclick="resetAll()" style="border:1px solid var(--border)">Reset to defaults</button>
+</div>
+
+<!-- DOCK -->
+<div class="dock">
+  <div class="dock-top">
+    <div>
+      <div class="lbl">Quote to patron</div>
+      <div class="price" id="price">£0</div>
     </div>
-
-    <button class="calc-btn" style="background:linear-gradient(135deg,var(--green),var(--green-dim));box-shadow:0 4px 20px rgba(0,206,201,.2)" onclick="showSummary()">
-      View Summary
-    </button>
+    <div class="dep">Deposit <span id="depPct">50%</span><br><b id="depAmt">£0</b><br>Balance <span id="balAmt">£0</span></div>
+  </div>
+  <div class="dock-btns">
+    <button class="b1" onclick="openQuote()">View quote</button>
+    <button class="b2" onclick="saveQuote()">Save</button>
   </div>
 </div>
 
-<!-- SUMMARY OVERLAY -->
-<div class="summary-overlay" id="summaryOverlay">
-  <div class="summary-card" id="summaryContent">
-    <h2>Pricing Summary</h2>
-    <div class="date" id="summaryDate"></div>
-    <div id="summaryBreakdown"></div>
-    <div class="summary-divider"></div>
-    <div class="summary-final">
-      <div class="label">Non-Negotiable Retail Price</div>
-      <div class="amount" id="summaryFinalPrice"></div>
-    </div>
-    <div class="summary-divider"></div>
-    <button class="close-summary" onclick="closeSummary()">Close</button>
+<!-- QUOTE OVERLAY -->
+<div class="overlay" id="quoteOv" onclick="if(event.target===this)closeOv('quoteOv')">
+  <div class="sheet">
+    <h2>Commission quote</h2>
+    <div class="sub" id="qDate"></div>
+    <div id="qBody"></div>
+    <div class="qbig"><div class="l">Commission price</div><div class="a" id="qPrice"></div><div class="d" id="qDep"></div></div>
+    <button class="btn b1" onclick="copyQuote()">Copy quote text for patron</button>
+    <button class="btn b2" onclick="closeOv('quoteOv')" style="border:1px solid var(--border)">Close</button>
   </div>
 </div>
+
+<!-- HISTORY OVERLAY -->
+<div class="overlay" id="histOv" onclick="if(event.target===this)closeOv('histOv')">
+  <div class="sheet">
+    <h2>Past quotes</h2>
+    <div class="sub">Compare against what you've charged before.</div>
+    <div id="histList"></div>
+    <button class="btn b2" onclick="closeOv('histOv')" style="border:1px solid var(--border)">Close</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
 
 <script>
-  let currency = '$';
-  let lastResults = null;
+// ─── REFERENCE DATA (rough, editable estimates) ───
+// hrs = hours per 100 sq in of painted area; mat = £ per 100 sq in; base = fixed £ (surface prep, sundries)
+const MEDIA = {
+  oil:{name:'Oil',hrs:3.0,mat:4.0,base:8,items:['Oil paint','Canvas / linen panel','Gesso','Solvent / medium','Brushes (wear)','Varnish']},
+  acrylic:{name:'Acrylic',hrs:2.4,mat:3.0,base:6,items:['Acrylic paint','Canvas / board','Gesso','Medium','Brushes (wear)','Varnish']},
+  watercolour:{name:'Watercolour',hrs:2.0,mat:2.5,base:5,items:['Watercolour paper','Watercolour paint','Masking fluid','Brushes (wear)']},
+  gouache:{name:'Gouache',hrs:2.2,mat:2.5,base:5,items:['Gouache paint','Heavy paper / board','Brushes (wear)']},
+  pastel:{name:'Pastel',hrs:2.2,mat:3.0,base:6,items:['Soft pastels','Pastel paper','Fixative']},
+  graphite:{name:'Graphite / charcoal',hrs:1.8,mat:1.2,base:4,items:['Drawing paper','Pencils / charcoal','Fixative']},
+  ink:{name:'Pen & ink',hrs:1.6,mat:1.5,base:4,items:['Bristol board / paper','Ink','Nibs / pens']},
+  mixed:{name:'Mixed media',hrs:2.5,mat:3.5,base:7,items:['Surface','Paints','Media / collage','Sealant']}
+};
+const SUBJECTS = {
+  portrait1:{name:'Portrait – 1 person',f:1.4},
+  portrait2:{name:'Portrait – 2+ people',f:1.8},
+  pet1:{name:'Pet portrait – 1 animal',f:1.25},
+  pet2:{name:'Pet portrait – 2+ animals',f:1.6},
+  house:{name:'House / building',f:1.3},
+  landscape:{name:'Landscape / seascape',f:1.0},
+  still:{name:'Still life',f:1.0},
+  botanical:{name:'Botanical / wildlife',f:1.2},
+  abstract:{name:'Abstract',f:0.8},
+  other:{name:'Other',f:1.0}
+};
+const SIZES_CM = [['A4',21,29.7],['A3',29.7,42],['A2',42,59.4],['30×40',30,40],['40×50',40,50],['50×70',50,70],['60×80',60,80],['76×102',76,102]];
+const SIZES_IN = [['8×10',8,10],['11×14',11,14],['12×16',12,16],['16×20',16,20],['18×24',18,24],['20×24',20,24],['24×36',24,36],['30×40',30,40]];
+const METHODS = [
+  {id:'time',t:'Time + materials',d:'Hours × rate + materials + frame, plus overhead'},
+  {id:'linear',t:'Linear inch',d:'(Width + Height in inches) × £/inch, + frame'},
+  {id:'square',t:'Square inch',d:'Width × Height in inches × £/sq in, + frame'},
+  {id:'max',t:'Highest of the three',d:'Never quote below any formula'}
+];
+const DEFAULTS = {patron:'',subject:'pet1',medium:'oil',detail:'1',unit:'cm',w:40,h:50,timeMode:'auto',adj:100,tsN:2,tsU:'weeks',tsDpw:4,tsHpd:3,hrs:20,rate:20,mats:[],framed:false,frameLvl:'0.7',frameExact:'',method:'time',dep:50,oh:15,fee:0,linMult:10,sqRate:1.5,round:'5',minPrice:0};
 
-  function setCurrency(btn) {
-    document.querySelectorAll('.currency-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    currency = btn.dataset.symbol;
-    document.querySelectorAll('.currency-symbol').forEach(el => el.textContent = currency);
-    if (lastResults) renderResults(lastResults);
-  }
+let S = load() || JSON.parse(JSON.stringify(DEFAULTS));
+let last = null;
+const $ = id => document.getElementById(id);
+const gbp = (n,dp) => '£' + (Number(n)||0).toLocaleString('en-GB',{minimumFractionDigits:dp??2,maximumFractionDigits:dp??2});
 
-  function toggleTip(el) {
-    const wasOpen = el.classList.contains('show');
-    document.querySelectorAll('.info-tip.show').forEach(t => t.classList.remove('show'));
-    if (!wasOpen) el.classList.add('show');
-  }
-  document.addEventListener('click', e => {
-    if (!e.target.closest('.info-tip')) {
-      document.querySelectorAll('.info-tip.show').forEach(t => t.classList.remove('show'));
-    }
+function load(){try{const s=localStorage.getItem('cq_state');return s?Object.assign(JSON.parse(JSON.stringify(DEFAULTS)),JSON.parse(s)):null}catch(e){return null}}
+function persist(){try{localStorage.setItem('cq_state',JSON.stringify(S))}catch(e){}}
+
+// ─── BUILD UI ───
+function init(){
+  $('subject').innerHTML = Object.entries(SUBJECTS).map(([k,v])=>`<option value="${k}">${v.name}</option>`).join('');
+  $('medium').innerHTML = Object.entries(MEDIA).map(([k,v])=>`<option value="${k}">${v.name}</option>`).join('');
+  bindSeg('detailSeg','detail',()=>{$('detailVal').textContent=document.querySelector('#detailSeg .on').textContent});
+  bindSeg('unitSeg','unit',v=>{convertUnits(v);renderSizeChips()});
+  bindSeg('timeSeg','timeMode',showTimeMode);
+  bindSeg('frameSeg','frameLvl');
+  bindSeg('roundSeg','round');
+  ['patron','subject','medium','w','h','tsN','tsU','tsDpw','tsHpd','hrs','frameExact','linMult','sqRate','minPrice'].forEach(id=>{
+    $(id).addEventListener('input',()=>{S[id]=$(id).type==='number'?$(id).value:$(id).value;calc()});
   });
+  ['adj','rate','dep','oh','fee'].forEach(id=>$(id).addEventListener('input',()=>{S[id]=+$(id).value;calc()}));
+  $('framed').addEventListener('change',()=>{S.framed=$('framed').checked;$('frameOpts').classList.toggle('hidden',!S.framed);calc()});
+  $('medium').addEventListener('change',()=>{if(!S.mats.length)renderMats()});
+  document.addEventListener('click',e=>{if(!e.target.closest('.info'))document.querySelectorAll('.info.show').forEach(t=>t.classList.remove('show'))});
+  applyState();
+}
+function bindSeg(id,key,cb){
+  $(id).querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+    $(id).querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+    S[key]=b.dataset.v;cb&&cb(b.dataset.v);calc();
+  }));
+}
+function setSeg(id,v){$(id).querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===String(v)))}
+function applyState(){
+  ['patron','subject','medium','w','h','tsN','tsU','tsDpw','tsHpd','hrs','frameExact','linMult','sqRate','minPrice','adj','rate','dep','oh','fee'].forEach(id=>$(id).value=S[id]);
+  setSeg('detailSeg',S.detail);$('detailVal').textContent=document.querySelector('#detailSeg .on').textContent;
+  setSeg('unitSeg',S.unit);setSeg('timeSeg',S.timeMode);setSeg('frameSeg',S.frameLvl);setSeg('roundSeg',S.round);
+  $('framed').checked=S.framed;$('frameOpts').classList.toggle('hidden',!S.framed);
+  showTimeMode(S.timeMode);renderSizeChips();renderMats();calc();
+}
+function showTimeMode(m){$('timeAuto').classList.toggle('hidden',m!=='auto');$('timeScale').classList.toggle('hidden',m!=='scale');$('timeExact').classList.toggle('hidden',m!=='exact')}
+function convertUnits(to){
+  const f = to==='in' ? 1/2.54 : 2.54;
+  S.w = +(S.w*f).toFixed(1); S.h = +(S.h*f).toFixed(1);
+  $('w').value=S.w; $('h').value=S.h;
+}
+function renderSizeChips(){
+  const list = S.unit==='cm'?SIZES_CM:SIZES_IN;
+  $('sizeChips').innerHTML = list.map(([n,w,h])=>`<button class="chip" onclick="pickSize(${w},${h})">${n}</button>`).join('');
+}
+function pickSize(w,h){S.w=w;S.h=h;$('w').value=w;$('h').value=h;calc()}
+function tip(el){const o=el.classList.contains('show');document.querySelectorAll('.info.show').forEach(t=>t.classList.remove('show'));if(!o)el.classList.add('show')}
 
-  function addMaterial() {
-    const container = document.getElementById('materialsContainer');
-    const row = document.createElement('div');
-    row.className = 'material-row';
-    row.innerHTML = `
-      <div class="input-wrap"><input type="text" placeholder="Material name" class="mat-name"></div>
-      <div class="input-wrap"><span class="input-prefix currency-symbol">${currency}</span><input type="number" placeholder="0.00" min="0" step="0.01" inputmode="decimal" class="mat-cost"></div>
-      <button class="remove-btn" onclick="removeMaterial(this)" aria-label="Remove material">&times;</button>
-    `;
-    container.appendChild(row);
-  }
+// ─── MATERIALS ───
+function renderMats(){
+  $('mats').innerHTML = S.mats.map((m,i)=>`
+    <div class="mat-row">
+      <input class="input n" value="${esc(m.n)}" placeholder="Item" oninput="S.mats[${i}].n=this.value;calc()">
+      <input class="input c" type="number" inputmode="decimal" value="${m.c}" placeholder="£" oninput="S.mats[${i}].c=this.value;calc()">
+      <a class="ibtn j" href="#" onclick="jackson(${i});return false" title="Search Jackson's">J</a>
+      <button class="ibtn x" onclick="S.mats.splice(${i},1);renderMats();calc()">✕</button>
+    </div>`).join('') + (S.mats.length?'':`<div class="chips" style="margin:0 0 10px">${MEDIA[S.medium].items.map(it=>`<button class="chip" onclick="addMat('${esc(it)}')">+ ${esc(it)}</button>`).join('')}</div>`);
+}
+function addMat(name){S.mats.push({n:name||'',c:''});renderMats();calc();const rows=$('mats').querySelectorAll('.mat-row');const r=rows[rows.length-1];if(r)r.querySelector(name?'.c':'.n').focus()}
+function jackson(i){
+  const q = (S.mats[i].n||'').trim(); if(!q){toast('Type an item name first');return}
+  window.open('https://www.google.com/search?q='+encodeURIComponent('site:jacksonsart.com '+q),'_blank');
+}
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/'/g,'&#39;')}
 
-  function removeMaterial(btn) {
-    const container = document.getElementById('materialsContainer');
-    if (container.children.length > 1) {
-      btn.parentElement.remove();
-    } else {
-      const row = btn.parentElement;
-      row.querySelector('.mat-name').value = '';
-      row.querySelector('.mat-cost').value = '';
-    }
-  }
+// ─── CALCULATION ───
+function calc(){
+  persist();
+  const med = MEDIA[S.medium], sub = SUBJECTS[S.subject];
+  const toIn = S.unit==='cm' ? 1/2.54 : 1;
+  const wIn = (+S.w||0)*toIn, hIn = (+S.h||0)*toIn;
+  const area = wIn*hIn;                       // sq in
+  const perimCm = 2*((+S.w||0)+(+S.h||0))*(S.unit==='cm'?1:2.54);
 
-  function getMaterials() {
-    const rows = document.querySelectorAll('.material-row');
-    const materials = [];
-    rows.forEach(row => {
-      const name = row.querySelector('.mat-name').value.trim() || 'Unnamed material';
-      const cost = parseFloat(row.querySelector('.mat-cost').value) || 0;
-      if (cost > 0) materials.push({ name, cost });
-    });
-    return materials;
-  }
+  // Hours
+  const autoHrs = (2 + med.hrs * Math.pow(area/100, 0.85)) * sub.f * (+S.detail) * (S.adj/100);
+  let hours;
+  if(S.timeMode==='auto') hours = autoHrs;
+  else if(S.timeMode==='scale'){
+    const days = S.tsU==='weeks' ? (+S.tsN||0)*(+S.tsDpw||0) : (+S.tsN||0);
+    hours = days*(+S.tsHpd||0);
+  } else hours = +S.hrs||0;
+  hours = Math.round(hours*2)/2;
+  $('hoursOut').textContent = hours + ' hrs' + (S.timeMode==='auto' ? '' : '  (auto est. ' + Math.round(autoHrs) + ')');
 
-  function fmt(n) {
-    return currency + n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }
+  // Materials
+  const matEst = med.base + med.mat*(area/100);
+  const matItems = S.mats.reduce((s,m)=>s+(+m.c||0),0);
+  const useItems = S.mats.length>0 && matItems>0;
+  const materials = useItems ? matItems : matEst;
+  $('matEst').textContent = gbp(matEst) + (useItems ? ' (using your list: '+gbp(matItems)+')' : '');
 
-  function calculate() {
-    const hourlyRate = parseFloat(document.getElementById('hourlyRate').value) || 0;
-    const hours = parseFloat(document.getElementById('hoursLogged').value) || 0;
-    const overheadPct = parseFloat(document.getElementById('overhead').value) || 0;
-    const commissionPct = parseFloat(document.getElementById('commission').value) || 0;
-    const materials = getMaterials();
+  // Frame
+  let frame = 0;
+  if(S.framed){ frame = S.frameExact!=='' && +S.frameExact>0 ? +S.frameExact : perimCm*(+S.frameLvl) + 10; }
+  $('frameOut').textContent = gbp(frame);
 
-    // Step 1: Labor cost
-    const laborCost = hourlyRate * hours;
+  // Methods
+  const oh = S.oh/100, fee = S.fee/100;
+  const gross = x => fee<1 ? x/(1-fee) : x;
+  const labour = hours*S.rate;
+  const timeBase = labour + materials + frame;
+  const timeP = gross(timeBase*(1+oh));
+  const linP = gross((wIn+hIn)*(+S.linMult||0) + frame);
+  const sqP = gross(area*(+S.sqRate||0) + frame);
+  const vals = {time:timeP, linear:linP, square:sqP, max:Math.max(timeP,linP,sqP)};
+  const raw = Math.max(vals[S.method], +S.minPrice||0);
+  const step = +S.round;
+  const price = Math.ceil(raw/step)*step;
+  const depAmt = Math.ceil(price*S.dep/100);
+  const bal = price-depAmt;
 
-    // Step 2: Total material cost
-    const materialCost = materials.reduce((sum, m) => sum + m.cost, 0);
+  $('methods').innerHTML = METHODS.map(m=>`<div class="method ${S.method===m.id?'on':''}" onclick="S.method='${m.id}';calc()"><div><div class="mt">${m.t}</div><div class="md">${m.d}</div></div><div class="mp">${gbp(vals[m.id],0)}</div></div>`).join('');
 
-    // Subtotal
-    const subtotal = laborCost + materialCost;
+  // Breakdown (time-based components scaled to the final price so the bar adds up)
+  const ohAmt = timeBase*oh, feeAmt = timeP - timeBase*(1+oh);
+  const parts = [['Labour',labour,'#6c5ce7'],['Materials',materials,'#00cec9'],['Frame',frame,'#a29bfe'],['Overhead',ohAmt,'#fdcb6e'],['Fee',feeAmt,'#ff6b6b']];
+  const extra = price - timeP; if(extra>0.5) parts.push(['Formula uplift',extra,'#2ecc71']);
+  const tot = parts.reduce((s,p)=>s+Math.max(p[1],0),0)||1;
+  $('bars').innerHTML = parts.filter(p=>p[1]>0).map(p=>`<div style="width:${p[1]/tot*100}%;background:${p[2]}"></div>`).join('');
+  $('legend').innerHTML = parts.filter(p=>p[1]>0).map(p=>`<span><i style="background:${p[2]}"></i>${p[0]}</span>`).join('');
 
-    // Step 3: Overhead → break-even
-    const overheadAmount = subtotal * (overheadPct / 100);
-    const breakEven = subtotal + overheadAmount;
+  const rows = [
+    ['Size', `${S.w} × ${S.h} ${S.unit} (${area.toFixed(0)} sq in)`],
+    ['Labour', `${hours} hrs × ${gbp(S.rate,0)} = ${gbp(labour)}`],
+    ['Materials', gbp(materials)],
+  ];
+  if(S.framed) rows.push(['Frame', gbp(frame)]);
+  rows.push(['Overhead ('+S.oh+'%)', '+ '+gbp(ohAmt)]);
+  rows.push(['Break-even', gbp(timeBase*(1+oh)), 'hl']);
+  if(fee>0) rows.push(['Fee buffer ('+S.fee+'%)', '+ '+gbp(feeAmt)]);
+  if(S.method!=='time') rows.push(['Formula used', METHODS.find(m=>m.id===S.method).t]);
+  rows.push(['Quote', gbp(price,0), 'tot']);
+  rows.push(['Effective hourly', hours>0 ? gbp((price - materials - frame - ohAmt - (fee>0?price*fee:0))/hours) + '/hr' : '–']);
+  $('breakdown').innerHTML = rows.map(r=>`<div class="brow ${r[2]||''}"><span class="k">${r[0]}</span><span class="v">${r[1]}</span></div>`).join('');
 
-    // Wholesale price (break-even + small margin ~15%)
-    const wholesale = breakEven * 1.15;
+  // Labels
+  $('rateVal').textContent = gbp(S.rate,0)+'/hr';
+  $('adjVal').textContent = S.adj+'%';
+  $('depVal').textContent = $('depPct').textContent = S.dep+'%';
+  $('ohVal').textContent = S.oh+'%'; $('feeVal').textContent = S.fee+'%';
+  document.querySelectorAll('input[type=range]').forEach(r=>r.style.setProperty('--p',((r.value-r.min)/(r.max-r.min)*100)+'%'));
 
-    // Step 4: Commission protection
-    // Final = breakEven / (1 - commissionRate) so after commission you still get breakEven+margin
-    const commissionRate = commissionPct / 100;
-    const retailBeforeRound = commissionRate < 1 ? wholesale / (1 - commissionRate) : wholesale;
-    const commissionAmount = retailBeforeRound - wholesale;
+  // Dock
+  const pe = $('price');
+  if(!last || last.price!==price){ pe.classList.remove('pop'); void pe.offsetWidth; pe.classList.add('pop'); }
+  pe.textContent = gbp(price,0);
+  $('depAmt').textContent = gbp(depAmt,0);
+  $('balAmt').textContent = gbp(bal,0);
 
-    // Step 5: Round up to nearest whole number — never round down
-    const finalPrice = Math.ceil(retailBeforeRound);
+  last = {price,depAmt,bal,hours,materials,frame,labour,area,wIn,hIn,med:med.name,sub:sub.name};
+}
 
-    lastResults = {
-      laborCost, materials, materialCost, subtotal,
-      overheadPct, overheadAmount, breakEven, wholesale,
-      commissionPct, commissionAmount, retailBeforeRound, finalPrice
-    };
+// ─── QUOTE ───
+function quoteText(){
+  const d = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  const L = [];
+  L.push('Commission quote' + (S.patron?' – '+S.patron:''));
+  L.push(d); L.push('');
+  L.push('Subject: '+last.sub);
+  L.push('Medium: '+last.med);
+  L.push('Size: '+S.w+' × '+S.h+' '+S.unit);
+  L.push('Framing: '+(S.framed?'Framed':'Unframed'));
+  L.push(''); L.push('Price: '+gbp(last.price,0));
+  L.push('Deposit to book ('+S.dep+'%): '+gbp(last.depAmt,0));
+  L.push('Balance on completion: '+gbp(last.bal,0));
+  return L.join('\n');
+}
+function openQuote(){
+  $('qDate').textContent = (S.patron||'Commission') + ' · ' + new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  const rows = [['Subject',last.sub],['Medium',last.med],['Size',S.w+' × '+S.h+' '+S.unit],['Framing',S.framed?'Framed':'Unframed'],['Est. time',last.hours+' hrs'],['Balance on completion',gbp(last.bal,0)]];
+  $('qBody').innerHTML = rows.map(r=>`<div class="brow"><span class="k">${r[0]}</span><span class="v">${esc(r[1])}</span></div>`).join('');
+  $('qPrice').textContent = gbp(last.price,0);
+  $('qDep').textContent = S.dep+'% deposit to book: '+gbp(last.depAmt,0);
+  $('quoteOv').classList.add('open');
+}
+function copyQuote(){navigator.clipboard.writeText(quoteText()).then(()=>toast('Quote copied')).catch(()=>toast('Copy failed'))}
+function closeOv(id){$(id).classList.remove('open')}
 
-    renderResults(lastResults);
+// ─── HISTORY ───
+function getHist(){try{return JSON.parse(localStorage.getItem('cq_hist')||'[]')}catch(e){return []}}
+function setHist(h){try{localStorage.setItem('cq_hist',JSON.stringify(h))}catch(e){}}
+function saveQuote(){
+  const h = getHist();
+  h.unshift({date:new Date().toISOString(),state:JSON.parse(JSON.stringify(S)),price:last.price,hours:last.hours,label:(S.patron||SUBJECTS[S.subject].name)});
+  setHist(h.slice(0,100)); toast('Quote saved');
+}
+function openHistory(){
+  const h = getHist();
+  $('histList').innerHTML = h.length ? h.map((q,i)=>{
+    const s=q.state;
+    return `<div class="hist"><div class="t"><span>${esc(q.label)}</span><span>${gbp(q.price,0)}</span></div>
+      <div class="m">${new Date(q.date).toLocaleDateString('en-GB')} · ${esc(MEDIA[s.medium]?.name||'')} · ${s.w}×${s.h}${s.unit} · ${q.hours}h @ £${s.rate}/hr${s.framed?' · framed':''}</div>
+      <div class="a"><button onclick="loadHist(${i})">Load</button><button onclick="delHist(${i})" style="color:var(--red)">Delete</button></div></div>`;
+  }).join('') : '<div class="note" style="text-align:center;padding:20px 0">No saved quotes yet. Tap Save on any quote to keep it here.</div>';
+  $('histOv').classList.add('open');
+}
+function loadHist(i){const q=getHist()[i];if(!q)return;S=Object.assign(JSON.parse(JSON.stringify(DEFAULTS)),q.state);applyState();closeOv('histOv');toast('Quote loaded')}
+function delHist(i){if(!confirm('Delete this saved quote?'))return;const h=getHist();h.splice(i,1);setHist(h);openHistory()}
 
-    const resultsEl = document.getElementById('results');
-    resultsEl.classList.add('visible');
+function resetAll(){if(!confirm('Reset all inputs? Saved quotes are kept.'))return;S=JSON.parse(JSON.stringify(DEFAULTS));applyState();toast('Reset')}
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1800)}
 
-    // Trigger price animation
-    const card = document.getElementById('finalPriceCard');
-    card.classList.remove('price-reveal');
-    void card.offsetWidth;
-    card.classList.add('price-reveal');
-
-    // Scroll to results
-    setTimeout(() => {
-      resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
-  }
-
-  function renderResults(r) {
-    // Breakdown
-    const rows = [
-      { label: 'Labor Cost', value: fmt(r.laborCost) },
-      ...r.materials.map(m => ({ label: `  ${m.name}`, value: fmt(m.cost) })),
-      { label: 'Total Materials', value: fmt(r.materialCost) },
-      { label: 'Subtotal', value: fmt(r.subtotal), cls: '' },
-      { label: `Overhead (${r.overheadPct}%)`, value: '+ ' + fmt(r.overheadAmount) },
-      { label: 'Break-Even Threshold', value: fmt(r.breakEven), cls: 'warn' },
-      { label: 'Wholesale Price', value: fmt(r.wholesale), cls: '' },
-      { label: `Commission Buffer (${r.commissionPct}%)`, value: '+ ' + fmt(r.commissionAmount) },
-      { label: 'Final Retail Price', value: fmt(r.finalPrice), cls: 'highlight' },
-    ];
-
-    const container = document.getElementById('breakdownRows');
-    container.innerHTML = rows.map(row =>
-      `<div class="breakdown-row ${row.cls || ''}">
-        <span class="breakdown-label">${row.label}</span>
-        <span class="breakdown-value">${row.value}</span>
-      </div>`
-    ).join('');
-
-    // Final price display
-    document.getElementById('finalPriceDisplay').textContent = fmt(r.finalPrice);
-
-    // Bar chart
-    const total = r.laborCost + r.materialCost + r.overheadAmount + r.commissionAmount;
-    const segments = [
-      { label: 'Labor', value: r.laborCost, cls: 'labor' },
-      { label: 'Materials', value: r.materialCost, cls: 'materials' },
-      { label: 'Overhead', value: r.overheadAmount, cls: 'overhead' },
-      { label: 'Commission', value: r.commissionAmount, cls: 'commission' },
-    ].filter(s => s.value > 0);
-
-    const chart = document.getElementById('barChart');
-    chart.innerHTML = segments.map(s => {
-      const pct = total > 0 ? (s.value / total * 100) : 0;
-      return `<div class="bar-row">
-        <span class="bar-label">${s.label}</span>
-        <div class="bar-track">
-          <div class="bar-fill ${s.cls}" style="width:0%">${fmt(s.value)}</div>
-        </div>
-      </div>`;
-    }).join('');
-
-    // Animate bars
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        const fills = chart.querySelectorAll('.bar-fill');
-        segments.forEach((s, i) => {
-          const pct = total > 0 ? Math.max((s.value / total * 100), 8) : 0;
-          if (fills[i]) fills[i].style.width = pct + '%';
-        });
-      }, 50);
-    });
-  }
-
-  function resetAll() {
-    document.getElementById('hourlyRate').value = '';
-    document.getElementById('hoursLogged').value = '';
-    document.getElementById('overhead').value = '';
-    document.getElementById('commission').value = '';
-
-    const container = document.getElementById('materialsContainer');
-    container.innerHTML = `
-      <div class="material-row">
-        <div class="input-wrap"><input type="text" placeholder="Material name" class="mat-name"></div>
-        <div class="input-wrap"><span class="input-prefix currency-symbol">${currency}</span><input type="number" placeholder="0.00" min="0" step="0.01" inputmode="decimal" class="mat-cost"></div>
-        <button class="remove-btn" onclick="removeMaterial(this)" aria-label="Remove material">&times;</button>
-      </div>
-    `;
-
-    document.getElementById('results').classList.remove('visible');
-    lastResults = null;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  function showSummary() {
-    if (!lastResults) return;
-    const r = lastResults;
-    const overlay = document.getElementById('summaryOverlay');
-    document.getElementById('summaryDate').textContent = new Date().toLocaleDateString(undefined, {
-      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-    });
-
-    const lines = [
-      `<div class="breakdown-row"><span class="breakdown-label">Labor</span><span class="breakdown-value">${fmt(r.laborCost)}</span></div>`,
-      `<div class="breakdown-row"><span class="breakdown-label">Materials</span><span class="breakdown-value">${fmt(r.materialCost)}</span></div>`,
-      `<div class="breakdown-row"><span class="breakdown-label">Overhead (${r.overheadPct}%)</span><span class="breakdown-value">${fmt(r.overheadAmount)}</span></div>`,
-      `<div class="breakdown-row warn"><span class="breakdown-label">Break-Even</span><span class="breakdown-value">${fmt(r.breakEven)}</span></div>`,
-      `<div class="breakdown-row"><span class="breakdown-label">Wholesale</span><span class="breakdown-value">${fmt(r.wholesale)}</span></div>`,
-      `<div class="breakdown-row"><span class="breakdown-label">Commission (${r.commissionPct}%)</span><span class="breakdown-value">${fmt(r.commissionAmount)}</span></div>`,
-    ];
-
-    document.getElementById('summaryBreakdown').innerHTML = lines.join('');
-    document.getElementById('summaryFinalPrice').textContent = fmt(r.finalPrice);
-    overlay.classList.add('visible');
-  }
-
-  function closeSummary() {
-    document.getElementById('summaryOverlay').classList.remove('visible');
-  }
+init();
 </script>
 </body>
 </html>
